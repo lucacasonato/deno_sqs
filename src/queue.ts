@@ -1,5 +1,6 @@
 import { AWSSignerV4, sha256 } from "../deps.ts";
 import type { SendMessageOptions } from "./types.ts";
+import { SQSError } from "./error.ts";
 
 export interface SQSQueueConfig {
   queueURL: string;
@@ -48,10 +49,11 @@ export class SQSQueue {
     const url = `/?Action=SendMessage&MessageBody=${
       encodeURIComponent(options.body)
     }`;
-    const resp = await this._doRequest(url, "GET", {});
-    if (!resp.ok) {
-      throw new Error(
-        `Failed to send message: ${resp.statusText}\n${await resp.text()}`,
+    const res = await this._doRequest(url, "GET", {});
+    if (!res.ok) {
+      throw new SQSError(
+        `Failed to send message: ${res.status} ${res.statusText}`,
+        await res.text(),
       );
     }
     return;
