@@ -1,4 +1,4 @@
-# deno_sqs 
+# deno_sqs
 
 Amazon SQS for Deno
 
