@@ -56,6 +56,8 @@ export class SQSQueue {
         await res.text(),
       );
     }
+    // Close body stream
+    await res.arrayBuffer();
     return;
   }
 }
