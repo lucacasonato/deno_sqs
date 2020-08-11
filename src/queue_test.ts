@@ -22,7 +22,7 @@ Deno.test({
 Deno.test({
   name: "receive message",
   async fn() {
-    const res = await queue.receiveMessage();
+    const res = await queue.receiveMessage({ maxNumberOfMessages: 10 });
     assert(res);
     assertEquals(res.messages.length, 1);
     const message = res.messages[0];
@@ -30,6 +30,7 @@ Deno.test({
     assertEquals(typeof message.receiptHandle, "string");
     assertEquals(typeof message.md5OfBody, "string");
     assertEquals(message.body, "test");
+    await queue.purge();
   },
 });
 
@@ -37,17 +38,40 @@ Deno.test({
   name: "purge queue",
   async fn() {
     await queue.sendMessage({
-      body: "test",
+      body: "test1",
     });
     await queue.sendMessage({
-      body: "test",
+      body: "test2",
     });
     await queue.sendMessage({
-      body: "test",
+      body: "test3",
     });
+    const res1 = await queue.receiveMessage({ maxNumberOfMessages: 10 });
+    assert(res1);
+    assertEquals(res1.messages.length, 3);
     await queue.purge();
-    const res = await queue.receiveMessage();
-    assert(res);
-    assertEquals(res.messages.length, 0);
+    const res2 = await queue.receiveMessage();
+    assert(res2);
+    assertEquals(res2.messages.length, 0);
+  },
+});
+
+Deno.test({
+  name: "delete message",
+  async fn() {
+    await queue.sendMessage({
+      body: "test1",
+    });
+    await queue.sendMessage({
+      body: "test2",
+    });
+    const res1 = await queue.receiveMessage({ maxNumberOfMessages: 10 });
+    assert(res1);
+    assertEquals(res1.messages.length, 2);
+    await queue.deleteMessage(res1.messages[0].receiptHandle);
+    const res2 = await queue.receiveMessage({ maxNumberOfMessages: 10 });
+    assert(res2);
+    assertEquals(res2.messages.length, 1);
+    await queue.purge();
   },
 });

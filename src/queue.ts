@@ -1,4 +1,4 @@
-import { AWSSignerV4, sha256, parseXML } from "../deps.ts";
+import { AWSSignerV4, sha256 } from "../deps.ts";
 import {
   parseSendMessageResponse,
   parseReceiveMessageBody,
@@ -126,6 +126,23 @@ export class SQSQueue {
     if (!res.ok) {
       throw new SQSError(
         `Failed to purge queue: ${res.status} ${res.statusText}`,
+        await res.text(),
+      );
+    }
+    await res.arrayBuffer();
+    return;
+  }
+
+  async deleteMessage(receiptHandle: string): Promise<void> {
+    const res = await this._doRequest(
+      "/",
+      { Action: "DeleteMessage", ReceiptHandle: receiptHandle },
+      "POST",
+      {},
+    );
+    if (!res.ok) {
+      throw new SQSError(
+        `Failed to delete message: ${res.status} ${res.statusText}`,
         await res.text(),
       );
     }

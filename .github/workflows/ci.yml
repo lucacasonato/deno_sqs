@@ -29,7 +29,7 @@ jobs:
       - name: Start elasticmq
         run: |
           docker-compose up -d
-          aws --endpoint-url "http://localhost:9324" sqs create-queue --queue-name test --region us-east-1
+          aws --endpoint-url "http://localhost:9324" sqs create-queue --queue-name test --region us-east-1 --attributes VisibilityTimeout=1
 
       - name: Test
         run: deno test --allow-net --allow-env
