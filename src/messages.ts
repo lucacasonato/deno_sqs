@@ -11,7 +11,7 @@ interface Document {
 
 interface Xml {
   name: string;
-  attributes: any;
+  attributes: unknown;
   children: Xml[];
   content?: string;
 }
