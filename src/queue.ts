@@ -1,6 +1,7 @@
-import { AWSSignerV4, sha256 } from "../deps.ts";
-import type { SendMessageOptions } from "./types.ts";
+import { AWSSignerV4, sha256, parseXML } from "../deps.ts";
+import { parseSendMessageResponse } from "./messages.ts";
 import { SQSError } from "./error.ts";
+import type { SendMessageOptions, SendMessageResponse } from "./types.ts";
 
 export interface SQSQueueConfig {
   queueURL: string;
@@ -45,7 +46,7 @@ export class SQSQueue {
 
   async sendMessage(
     options: SendMessageOptions,
-  ): Promise<void> {
+  ): Promise<SendMessageResponse> {
     const url = `/?Action=SendMessage&MessageBody=${
       encodeURIComponent(options.body)
     }`;
@@ -56,8 +57,7 @@ export class SQSQueue {
         await res.text(),
       );
     }
-    // Close body stream
-    await res.arrayBuffer();
-    return;
+    const xml = await res.text();
+    return parseSendMessageResponse(xml);
   }
 }
