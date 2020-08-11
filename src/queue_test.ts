@@ -1,3 +1,4 @@
+import { assert, assertEquals } from "../test_deps.ts";
 import { SQSQueue } from "./queue.ts";
 
 const queue = new SQSQueue({
@@ -13,5 +14,7 @@ Deno.test({
     const res = await queue.sendMessage({
       body: "test",
     });
+    assert(res);
+    assertEquals(typeof res.messageID, "string");
   },
 });
