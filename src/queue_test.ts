@@ -18,3 +18,17 @@ Deno.test({
     assertEquals(typeof res.messageID, "string");
   },
 });
+
+Deno.test({
+  name: "receive message",
+  async fn() {
+    const res = await queue.receiveMessage();
+    assert(res);
+    assertEquals(res.messages.length, 1);
+    const message = res.messages[0];
+    assertEquals(typeof message.messageID, "string");
+    assertEquals(typeof message.receiptHandle, "string");
+    assertEquals(typeof message.md5OfBody, "string");
+    assertEquals(message.body, "test");
+  },
+});

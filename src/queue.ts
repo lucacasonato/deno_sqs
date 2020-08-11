@@ -1,7 +1,15 @@
 import { AWSSignerV4, sha256, parseXML } from "../deps.ts";
-import { parseSendMessageResponse } from "./messages.ts";
+import {
+  parseSendMessageResponse,
+  parseReceiveMessageBody,
+} from "./messages.ts";
 import { SQSError } from "./error.ts";
-import type { SendMessageOptions, SendMessageResponse } from "./types.ts";
+import type {
+  SendMessageOptions,
+  SendMessageResponse,
+  ReceiveMessageOptions,
+  ReceiveMessageResponse,
+} from "./types.ts";
 
 export interface SQSQueueConfig {
   queueURL: string;
@@ -11,9 +19,13 @@ export interface SQSQueueConfig {
   sessionToken?: string;
 }
 
+interface Params {
+  [key: string]: string;
+}
+
 export class SQSQueue {
   #signer: AWSSignerV4;
-  #host: string;
+  #queueURL: string;
 
   constructor(config: SQSQueueConfig) {
     this.#signer = new AWSSignerV4(config.region, {
@@ -21,17 +33,27 @@ export class SQSQueue {
       awsSecretKey: config.secretKey,
       sessionToken: config.sessionToken,
     });
-    this.#host = config.queueURL;
+    this.#queueURL = config.queueURL;
   }
 
   private _doRequest(
     path: string,
+    params: Params,
     method: string,
     headers: { [key: string]: string },
     body?: Uint8Array | undefined,
   ): Promise<Response> {
-    const url = `${this.#host}${path}`;
-    const signedHeaders = this.#signer.sign("sqs", url, method, headers, body);
+    const url = new URL(this.#queueURL + path);
+    for (const key in params) {
+      url.searchParams.set(key, params[key]);
+    }
+    const signedHeaders = this.#signer.sign(
+      "sqs",
+      url.toString(),
+      method,
+      headers,
+      body,
+    );
     signedHeaders["x-amz-content-sha256"] = sha256(
       body ?? "",
       "utf8",
@@ -47,10 +69,12 @@ export class SQSQueue {
   async sendMessage(
     options: SendMessageOptions,
   ): Promise<SendMessageResponse> {
-    const url = `/?Action=SendMessage&MessageBody=${
-      encodeURIComponent(options.body)
-    }`;
-    const res = await this._doRequest(url, "GET", {});
+    const res = await this._doRequest(
+      "/",
+      { Action: "SendMessage", MessageBody: encodeURIComponent(options.body) },
+      "GET",
+      {},
+    );
     if (!res.ok) {
       throw new SQSError(
         `Failed to send message: ${res.status} ${res.statusText}`,
@@ -59,5 +83,36 @@ export class SQSQueue {
     }
     const xml = await res.text();
     return parseSendMessageResponse(xml);
+  }
+
+  async receiveMessage(
+    options?: ReceiveMessageOptions,
+  ): Promise<ReceiveMessageResponse> {
+    const params: Params = { Action: "ReceiveMessage" };
+    if (options) {
+      if (options.maxNumberOfMessages) {
+        params["MaxNumberOfMessages"] = options.maxNumberOfMessages.toString();
+      }
+      if (options.visibilityTimeout) {
+        params["VisibilityTimeout"] = options.visibilityTimeout.toString();
+      }
+      if (options.waitTimeSeconds) {
+        params["WaitTimeSeconds"] = options.waitTimeSeconds.toString();
+      }
+    }
+    const res = await this._doRequest(
+      "/",
+      params,
+      "GET",
+      {},
+    );
+    if (!res.ok) {
+      throw new SQSError(
+        `Failed to send message: ${res.status} ${res.statusText}`,
+        await res.text(),
+      );
+    }
+    const xml = await res.text();
+    return parseReceiveMessageBody(xml);
   }
 }

@@ -1,5 +1,9 @@
 import { parseXML } from "../deps.ts";
-import type { SendMessageResponse } from "./types.ts";
+import type {
+  SendMessageResponse,
+  ReceiveMessageResponse,
+  Message,
+} from "./types.ts";
 import { SQSError } from "./error.ts";
 
 interface Document {
@@ -17,40 +21,69 @@ interface Xml {
 }
 
 export function parseSendMessageResponse(xml: string): SendMessageResponse {
-  const data: Document = parseXML(xml);
-  const { root } = data;
-  if (!root || root.name !== "SendMessageResponse") {
+  const doc: Document = parseXML(xml);
+  const root = extractRoot(doc, "SendMessageResponse");
+  const sendMessageResult = extractField(root, "SendMessageResult");
+
+  const messageID = extractContent(sendMessageResult, "MessageId");
+  const md5OfBody = extractContent(sendMessageResult, "MD5OfMessageBody");
+
+  return { messageID, md5OfBody };
+}
+
+export function parseReceiveMessageBody(xml: string): ReceiveMessageResponse {
+  const doc: Document = parseXML(xml);
+  const root = extractRoot(doc, "ReceiveMessageResponse");
+  const receiveMessageResult = extractField(root, "ReceiveMessageResult");
+
+  const messages = receiveMessageResult.children.map<Message>((message) => {
+    if (message.name !== "Message") {
+      throw new SQSError(
+        "Malformed field. Field type is not Message.",
+        JSON.stringify(message, undefined, 2),
+      );
+    }
+
+    const messageID = extractContent(message, "MessageId");
+    const receiptHandle = extractContent(message, "ReceiptHandle");
+    const md5OfBody = extractContent(message, "MD5OfBody");
+    const body = extractContent(message, "Body");
+
+    return { messageID, md5OfBody, receiptHandle, body };
+  });
+
+  return { messages };
+}
+
+function extractRoot(doc: Document, name: string): Xml {
+  if (!doc.root || doc.root.name !== name) {
     throw new SQSError(
-      "Malformed sendMessage response. Missing SendMessageResponse field.",
-      xml,
+      `Malformed XML document. Missing ${name} field.`,
+      JSON.stringify(doc, undefined, 2),
     );
   }
-  const sendMessageResult = root.children.find((d) =>
-    d.name === "SendMessageResult"
-  );
-  if (!sendMessageResult) {
+  return doc.root;
+}
+
+function extractField(node: Xml, name: string): Xml {
+  const bodyField = node.children.find((node) => node.name === name);
+  if (!bodyField) {
     throw new SQSError(
-      "Malformed sendMessage response. Missing SendMessageResult field.",
-      xml,
+      `Missing ${name} field in ${node.name} node.`,
+      JSON.stringify(node, undefined, 2),
     );
   }
-  const messageIDField = sendMessageResult.children.find((d) =>
-    d.name === "MessageId"
-  );
-  if (!messageIDField) {
+  return bodyField;
+}
+
+function extractContent(node: Xml, name: string): string {
+  const field = extractField(node, name);
+  const content = field.content;
+  if (!content) {
     throw new SQSError(
-      "Malformed sendMessage response. Missing MessageId field.",
-      xml,
+      `Missing content in ${node.name} node.`,
+      JSON.stringify(node, undefined, 2),
     );
   }
-  const messageID = messageIDField.content;
-  if (!messageID) {
-    throw new SQSError(
-      "Malformed sendMessage response. Missing content in MessageId field.",
-      xml,
-    );
-  }
-  return {
-    messageID,
-  };
+  return content;
 }
