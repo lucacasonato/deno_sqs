@@ -108,11 +108,28 @@ export class SQSQueue {
     );
     if (!res.ok) {
       throw new SQSError(
-        `Failed to send message: ${res.status} ${res.statusText}`,
+        `Failed to receive message: ${res.status} ${res.statusText}`,
         await res.text(),
       );
     }
     const xml = await res.text();
     return parseReceiveMessageBody(xml);
+  }
+
+  async purge(): Promise<void> {
+    const res = await this._doRequest(
+      "/",
+      { Action: "PurgeQueue" },
+      "POST",
+      {},
+    );
+    if (!res.ok) {
+      throw new SQSError(
+        `Failed to purge queue: ${res.status} ${res.statusText}`,
+        await res.text(),
+      );
+    }
+    await res.arrayBuffer();
+    return;
   }
 }

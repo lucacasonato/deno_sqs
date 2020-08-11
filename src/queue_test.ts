@@ -32,3 +32,22 @@ Deno.test({
     assertEquals(message.body, "test");
   },
 });
+
+Deno.test({
+  name: "purge queue",
+  async fn() {
+    await queue.sendMessage({
+      body: "test",
+    });
+    await queue.sendMessage({
+      body: "test",
+    });
+    await queue.sendMessage({
+      body: "test",
+    });
+    await queue.purge();
+    const res = await queue.receiveMessage();
+    assert(res);
+    assertEquals(res.messages.length, 0);
+  },
+});
