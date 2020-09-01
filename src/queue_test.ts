@@ -12,7 +12,7 @@ Deno.test({
   name: "send message",
   async fn() {
     const res = await queue.sendMessage({
-      body: "test",
+      body: "test 123",
     });
     assert(res);
     assertEquals(typeof res.messageID, "string");
@@ -29,7 +29,28 @@ Deno.test({
     assertEquals(typeof message.messageID, "string");
     assertEquals(typeof message.receiptHandle, "string");
     assertEquals(typeof message.md5OfBody, "string");
-    assertEquals(message.body, "test");
+    assertEquals(message.body, "test 123");
+    await queue.purge();
+  },
+});
+
+Deno.test({
+  name: "send & receive json",
+  async fn() {
+    const sent = await queue.sendMessage({
+      body: JSON.stringify({ hello: "world" }),
+    });
+    assert(sent);
+    assertEquals(typeof sent.messageID, "string");
+    const res = await queue.receiveMessage({ maxNumberOfMessages: 10 });
+    assert(res);
+    assertEquals(res.messages.length, 1);
+    const message = res.messages[0];
+    assertEquals(typeof message.messageID, "string");
+    assertEquals(message.messageID, sent.messageID);
+    assertEquals(typeof message.receiptHandle, "string");
+    assertEquals(typeof message.md5OfBody, "string");
+    assertEquals(message.body, JSON.stringify({ hello: "world" }));
     await queue.purge();
   },
 });

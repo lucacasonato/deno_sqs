@@ -71,7 +71,7 @@ export class SQSQueue {
   ): Promise<SendMessageResponse> {
     const res = await this._doRequest(
       "/",
-      { Action: "SendMessage", MessageBody: encodeURIComponent(options.body) },
+      { Action: "SendMessage", MessageBody: options.body },
       "GET",
       {},
     );

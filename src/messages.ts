@@ -1,4 +1,4 @@
-import { parseXML } from "../deps.ts";
+import { parseXML, decodeXMLEntities } from "../deps.ts";
 import type {
   SendMessageResponse,
   ReceiveMessageResponse,
@@ -85,5 +85,5 @@ function extractContent(node: Xml, name: string): string {
       JSON.stringify(node, undefined, 2),
     );
   }
-  return content;
+  return decodeXMLEntities(content);
 }
