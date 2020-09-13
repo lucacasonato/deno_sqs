@@ -1,4 +1,4 @@
-import { AWSSignerV4, sha256 } from "../deps.ts";
+import { AWSSignerV4, sha256Hex } from "../deps.ts";
 import {
   parseSendMessageResponse,
   parseReceiveMessageBody,
@@ -36,7 +36,7 @@ export class SQSQueue {
     this.#queueURL = config.queueURL;
   }
 
-  private _doRequest(
+  private async _doRequest(
     path: string,
     params: Params,
     method: string,
@@ -47,23 +47,18 @@ export class SQSQueue {
     for (const key in params) {
       url.searchParams.set(key, params[key]);
     }
-    const signedHeaders = this.#signer.sign(
-      "sqs",
-      url.toString(),
-      method,
+    const request = new Request(url.toString(), {
       headers,
-      body,
-    );
-    signedHeaders["x-amz-content-sha256"] = sha256(
-      body ?? "",
-      "utf8",
-      "hex",
-    ) as string;
-    return fetch(url, {
       method,
-      headers: signedHeaders,
       body,
     });
+
+    const signedRequest = await this.#signer.sign(
+      "sqs",
+      request,
+    );
+    signedRequest.headers.set("x-amz-content-sha256", sha256Hex(body ?? ""));
+    return fetch(signedRequest);
   }
 
   async sendMessage(
