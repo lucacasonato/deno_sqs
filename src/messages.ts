@@ -8,7 +8,7 @@ import { SQSError } from "./error.ts";
 
 interface Document {
   declaration: {
-    attributes: {};
+    attributes: Record<string, unknown>;
   };
   root: Xml | undefined;
 }
