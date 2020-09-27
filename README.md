@@ -9,7 +9,7 @@ Amazon SQS for Deno
 ## Examples
 
 ```ts
-import { SQSQueue } from "https://deno.land/x/sqs@0.3.3/mod.ts";
+import { SQSQueue } from "https://deno.land/x/sqs@0.3.4/mod.ts";
 
 // Create a queue using the queue url and credentials
 const queue = new SQSQueue({
