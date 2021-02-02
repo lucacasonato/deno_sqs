@@ -1,8 +1,8 @@
-import { parseXML, decodeXMLEntities } from "../deps.ts";
+import { decodeXMLEntities, parseXML } from "../deps.ts";
 import type {
-  SendMessageResponse,
-  ReceiveMessageResponse,
   Message,
+  ReceiveMessageResponse,
+  SendMessageResponse,
 } from "./types.ts";
 import { SQSError } from "./error.ts";
 

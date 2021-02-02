@@ -1,14 +1,14 @@
 import { AWSSignerV4, sha256Hex } from "../deps.ts";
 import {
-  parseSendMessageResponse,
   parseReceiveMessageBody,
+  parseSendMessageResponse,
 } from "./messages.ts";
 import { SQSError } from "./error.ts";
 import type {
-  SendMessageOptions,
-  SendMessageResponse,
   ReceiveMessageOptions,
   ReceiveMessageResponse,
+  SendMessageOptions,
+  SendMessageResponse,
 } from "./types.ts";
 
 export interface SQSQueueConfig {

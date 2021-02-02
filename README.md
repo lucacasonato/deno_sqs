@@ -35,7 +35,8 @@ for (const message of messages) {
 
 ## Contributing
 
-To run tests you need to have a S3 bucket you can talk to. For local development you can use min.io to emulate an S3 bucket:
+To run tests you need to have a S3 bucket you can talk to. For local development
+you can use min.io to emulate an S3 bucket:
 
 ```
 export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
