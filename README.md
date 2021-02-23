@@ -35,13 +35,8 @@ for (const message of messages) {
 
 ## Contributing
 
-To run tests you need to have a S3 bucket you can talk to. For local development
-you can use min.io to emulate an S3 bucket:
+Before running the tests, make sure to start the local dev containers.
 
 ```
-export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
-export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 docker-compose up -d
-aws --endpoint-url "http://localhost:9324" sqs create-queue --queue-name test --region us-east-1 --attributes VisibilityTimeout=0
-deno test --allow-net --allow-env
 ```
