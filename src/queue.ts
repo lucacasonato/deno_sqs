@@ -1,4 +1,4 @@
-import { AWSSignerV4, sha256Hex } from "../deps.ts";
+import { AWSSignerV4 } from "../deps.ts";
 import {
   parseReceiveMessageBody,
   parseSendMessageResponse,
@@ -57,7 +57,8 @@ export class SQSQueue {
       "sqs",
       request,
     );
-    signedRequest.headers.set("x-amz-content-sha256", sha256Hex(body ?? ""));
+    const contentHash = await sha256Hex(body ?? "");
+    signedRequest.headers.set("x-amz-content-sha256", contentHash);
     return fetch(signedRequest);
   }
 
@@ -144,4 +145,14 @@ export class SQSQueue {
     await res.arrayBuffer();
     return;
   }
+}
+
+async function sha256Hex(data: string | Uint8Array): Promise<string> {
+  if (typeof data === "string") {
+    data = new TextEncoder().encode(data);
+  }
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(hash)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
