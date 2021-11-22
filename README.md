@@ -1,6 +1,6 @@
 # deno_sqs
 
-[![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/sqs@0.3.6/mod.ts)
+[![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/sqs@0.3.7/mod.ts)
 
 Amazon SQS for Deno
 
@@ -9,7 +9,7 @@ Amazon SQS for Deno
 ## Examples
 
 ```ts
-import { SQSQueue } from "https://deno.land/x/sqs@0.3.6/mod.ts";
+import { SQSQueue } from "https://deno.land/x/sqs@0.3.7/mod.ts";
 
 // Create a queue using the queue url and credentials
 const queue = new SQSQueue({
