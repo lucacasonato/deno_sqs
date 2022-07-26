@@ -20,7 +20,7 @@ const queue = new SQSQueue({
 });
 
 // Send a message to this queue and print the message ID.
-const res = await queue.sendMesssage({ body: "Hello World!" });
+const res = await queue.sendMessage({ body: "Hello World!" });
 console.log("Sent message with id ", res.messageID);
 
 // Receive a message from the queue:
